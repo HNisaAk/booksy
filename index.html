@@ -1,275 +1,125 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Booksy – Okurların Dünyası</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#fff;color:#171717;font-family:Arial,sans-serif}
-button,input,textarea{font:inherit}
-button{cursor:pointer}
-.layout{max-width:1100px;margin:auto;display:grid;grid-template-columns:220px minmax(0,600px) 250px;gap:25px}
-.sidebar{height:100vh;position:sticky;top:0;padding:25px 10px;border-right:1px solid #eee}
-.logo{font-size:32px;font-weight:800;letter-spacing:-2px;margin:5px 15px 35px}
-.logo span{color:#777}
-.nav{display:block;width:100%;text-align:left;border:0;background:white;padding:15px;border-radius:12px;font-size:16px;margin-bottom:7px;color:#333}
-.nav:hover,.nav.active{background:#f2f2f2;font-weight:bold}
-.nav span{margin-right:12px}
-.postbtn{width:90%;margin:20px 5%;padding:14px;border:0;border-radius:30px;background:#171717;color:white;font-weight:bold}
-.main{border-right:1px solid #eee;min-height:100vh}
-.header{position:sticky;top:0;background:#ffffffed;backdrop-filter:blur(10px);padding:20px;border-bottom:1px solid #eee;z-index:2;font-size:20px;font-weight:bold}
-.composer{padding:20px;border-bottom:1px solid #eee}
-.composer textarea{width:100%;border:0;outline:0;resize:vertical;min-height:75px;font-size:16px}
-.composer input{width:100%;padding:11px;margin:8px 0;border:1px solid #ddd;border-radius:9px}
-.composer-bottom{display:flex;justify-content:flex-end}
-.primary{background:#171717;color:white;border:0;border-radius:25px;padding:11px 22px;font-weight:bold}
-.post{padding:20px;border-bottom:1px solid #eee}
-.posttop{display:flex;gap:10px;align-items:center}
-.avatar{width:42px;height:42px;border-radius:50%;background:#eee;display:grid;place-items:center;font-size:20px}
-.username{font-weight:bold}
-.handle{color:#888;font-size:13px;margin-top:3px}
-.posttext{line-height:1.6;margin:15px 0;white-space:pre-wrap;overflow-wrap:anywhere}
-.booktag{display:inline-block;background:#f4f4f4;padding:7px 11px;border-radius:7px;font-size:13px;color:#444}
-.actions{display:flex;gap:30px;margin-top:17px}
-.action{border:0;background:none;color:#777;padding:5px 0}
-.action:hover{color:#111}
-.right{padding:20px 0}
-.search{width:100%;padding:13px 16px;border-radius:25px;border:1px solid #eee;background:#f6f6f6;outline:none}
-.panel{background:#f7f7f7;border-radius:15px;padding:17px;margin-top:20px}
-.panel h3{margin:0 0 15px}
-.book{padding:12px 0;border-bottom:1px solid #e5e5e5}
-.book:last-child{border:0}
-.book small{display:block;color:#888;margin-top:5px}
-.book button{border:0;background:none;text-decoration:underline;font-size:12px;margin-top:8px}
-.mobilebar{display:none}
-.empty{text-align:center;padding:60px 20px;color:#888}
-.page{display:none}
-.page.active{display:block}
-.profilebox{padding:30px 20px;border-bottom:1px solid #eee}
-.profilebox h2{margin-bottom:5px}
-.commentbox{margin-top:15px;display:flex;gap:8px}
-.commentbox input{min-width:0;flex:1;padding:10px;border:1px solid #ddd;border-radius:20px}
-.commentbox button{border:0;background:#171717;color:white;border-radius:20px;padding:0 14px}
-.comments{font-size:13px;color:#555;margin-top:10px}
-@media(max-width:850px){
-.layout{grid-template-columns:75px minmax(0,600px);gap:0;justify-content:center}
-.sidebar{padding:20px 5px}
-.logo{font-size:23px;margin:8px}
-.nav{text-align:center;font-size:20px;padding:15px 5px}
-.nav .label{display:none}
-.nav span{margin:0}
-.postbtn{font-size:0;padding:13px}
-.postbtn:after{content:"+";font-size:22px}
-.right{display:none}
-.main{border-right:0}
-}
-@media(max-width:520px){
-.layout{display:block}
-.sidebar{display:none}
-.main{padding-bottom:65px}
-.mobilebar{display:flex;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #eee;justify-content:space-around;padding:13px;z-index:5}
-.mobilebar button{border:0;background:white;font-size:21px}
-.header{padding:17px}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booksy</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 15px; background: #f9f9f9; }
+    .box { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    input, textarea { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; }
+    button { background: #1d9bf0; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    button.secondary { background: #555; }
+    .post { border-bottom: 1px solid #eee; padding: 10px 0; }
+    .post small { color: #666; }
+  </style>
 </head>
 <body>
-<div class="layout">
-<aside class="sidebar">
-<div class="logo">booksy<span>.</span></div>
-<button class="nav active" onclick="showPage('home',this)"><span>⌂</span><span class="label">Ana sayfa</span></button>
-<button class="nav" onclick="showPage('discover',this)"><span>⌕</span><span class="label">Keşfet</span></button>
-<button class="nav" onclick="showPage('library',this)"><span>▤</span><span class="label">Kitaplığım</span></button>
-<button class="nav" onclick="showPage('profile',this)"><span>♙</span><span class="label">Profilim</span></button>
-<button class="postbtn" onclick="document.getElementById('postText').focus()">Gönderi oluştur</button>
-</aside>
 
-<main class="main">
-<div class="header" id="heading">Ana sayfa</div>
+  <h1>📚 Booksy</h1>
 
-<section class="page active" id="home">
-<div class="composer">
-<textarea id="postText" placeholder="Aklında hangi kitap var?"></textarea>
-<input id="bookName" placeholder="Kitap adı (isteğe bağlı)">
-<div class="composer-bottom"><button class="primary" onclick="addPost()">Paylaş</button></div>
-</div>
-<div id="feed"></div>
-</section>
+  <!-- Giriş / Kayıt Ekranı -->
+  <div id="auth-box" class="box">
+    <h3>Giriş Yap veya Kayıt Ol</h3>
+    <input type="email" id="email" placeholder="E-posta adresin">
+    <input type="password" id="password" placeholder="Şifren (en az 6 karakter)">
+    <button id="login-btn">Giriş Yap</button>
+    <button id="signup-btn" class="secondary">Kayıt Ol</button>
+  </div>
 
-<section class="page" id="discover">
-<div style="padding:20px">
-<input class="search" id="searchInput" placeholder="Kitap veya yazar ara..." oninput="searchBooks()">
-<h3>Kitapları keşfet</h3>
-<div id="bookResults"></div>
-</div>
-</section>
+  <!-- Gönderi Paylaşma Ekranı (Giriş yapınca görünür) -->
+  <div id="post-box" class="box" style="display:none;">
+    <p>Hoş geldin, <strong id="user-email"></strong> <button id="logout-btn" class="secondary" style="float:right; padding:5px 10px;">Çıkış</button></p>
+    <textarea id="post-text" rows="3" placeholder="Ne okuyorsun veya ne düşünüyorsun?"></textarea>
+    <button id="share-btn">Paylaş</button>
+  </div>
 
-<section class="page" id="library">
-<div style="padding:20px">
-<h3>Kitaplığım</h3>
-<p style="color:#888">Okumak istediğin kitapları burada sakla.</p>
-<div id="savedBooks"></div>
-</div>
-</section>
+  <!-- Gönderi Akışı (Feed) -->
+  <div class="box">
+    <h3>Akış</h3>
+    <div id="feed">Yükleniyor...</div>
+  </div>
 
-<section class="page" id="profile">
-<div class="profilebox">
-<div class="avatar" style="width:65px;height:65px">📚</div>
-<h2>Kitapsever</h2>
-<div style="color:#888">@booksy_reader</div>
-<p>Kitapların dünyasında kaybolmayı seviyorum.</p>
-<div id="postCount">0 gönderi</div>
-</div>
-<div id="myPosts"></div>
-</section>
-</main>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-<aside class="right">
-<input class="search" placeholder="Booksy'de ara..." oninput="quickSearch(this.value)">
-<div class="panel">
-<h3>Popüler kitaplar</h3>
-<div id="popular"></div>
-</div>
-<div class="panel">
-<h3>Booksy hakkında</h3>
-<p style="font-size:14px;line-height:1.6;color:#666">Kitapların, düşüncelerin ve okurların buluştuğu yer.</p>
-</div>
-</aside>
-</div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyC2CjLHWSKPeTB0HC6AT7AWSNIomHikS3Q",
+      authDomain: "booksy-2bca9.firebaseapp.com",
+      projectId: "booksy-2bca9",
+      storageBucket: "booksy-2bca9.firebasestorage.app",
+      messagingSenderId: "854942626548",
+      appId: "1:854942626548:web:d778ca1f2e05b08ef4e4a1"
+    };
 
-<div class="mobilebar">
-<button onclick="mobilePage('home')">⌂</button>
-<button onclick="mobilePage('discover')">⌕</button>
-<button onclick="document.getElementById('postText').focus();mobilePage('home')">＋</button>
-<button onclick="mobilePage('library')">▤</button>
-<button onclick="mobilePage('profile')">♙</button>
-</div>
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-<script>
-const books=[
-["Suç ve Ceza","Fyodor Dostoyevski"],
-["Kürk Mantolu Madonna","Sabahattin Ali"],
-["1984","George Orwell"],
-["Dönüşüm","Franz Kafka"],
-["Beyaz Geceler","Fyodor Dostoyevski"],
-["Küçük Prens","Antoine de Saint-Exupéry"],
-["Sefiller","Victor Hugo"],
-["Saatleri Ayarlama Enstitüsü","Ahmet Hamdi Tanpınar"],
-["Jane Eyre","Charlotte Brontë"],
-["Tutunamayanlar","Oğuz Atay"]
-];
+    const authBox = document.getElementById("auth-box");
+    const postBox = document.getElementById("post-box");
+    const userEmailEl = document.getElementById("user-email");
+    const feedEl = document.getElementById("feed");
 
-let posts=JSON.parse(localStorage.getItem("booksy_posts")||"null")||[
-{id:1,user:"kitapdunyasi",text:"Bazı kitaplar vardır, son sayfasını okusan bile hikâyesi seninle yaşamaya devam eder.",book:"Kürk Mantolu Madonna",likes:12,liked:false,comments:[]},
-{id:2,user:"okursever",text:"Bugün yeni bir kitaba başladım. İlk sayfalarından bile çok etkilendim. 📖",book:"Suç ve Ceza",likes:8,liked:false,comments:[]},
-{id:3,user:"edebiyat",text:"Sizce bir kitabı güzel yapan şey konusu mu, karakterleri mi, yoksa hissettirdikleri mi?",book:"",likes:21,liked:false,comments:[]}
-];
-let saved=JSON.parse(localStorage.getItem("booksy_saved")||"[]");
+    // Kayıt Ol
+    document.getElementById("signup-btn").onclick = async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (e) { alert("Hata: " + e.message); }
+    };
 
-function persist(){
-localStorage.setItem("booksy_posts",JSON.stringify(posts));
-localStorage.setItem("booksy_saved",JSON.stringify(saved));
-}
+    // Giriş Yap
+    document.getElementById("login-btn").onclick = async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (e) { alert("Hata: " + e.message); }
+    };
 
-function renderPosts(){
-const feed=document.getElementById("feed");
-const mine=document.getElementById("myPosts");
-feed.innerHTML="";
-mine.innerHTML="";
-[...posts].reverse().forEach(p=>{
-const el=document.createElement("article");
-el.className="post";
-el.innerHTML=`
-<div class="posttop"><div class="avatar">📖</div><div><div class="username">${escapeHTML(p.user)}</div><div class="handle">@${escapeHTML(p.user)}</div></div></div>
-<div class="posttext">${escapeHTML(p.text)}</div>
-${p.book?`<div class="booktag">📚 ${escapeHTML(p.book)}</div>`:""}
-<div class="actions">
-<button class="action" onclick="likePost(${p.id})">${p.liked?"♥":"♡"} ${p.likes}</button>
-<button class="action" onclick="document.getElementById('comment-${p.id}').focus()">▢ ${p.comments.length} yorum</button>
-<button class="action" onclick="savePostBook('${escapeJS(p.book)}')">＋ Kitaplığa ekle</button>
-</div>
-<div class="comments">${p.comments.map(c=>"<p>💬 "+escapeHTML(c)+"</p>").join("")}</div>
-<div class="commentbox"><input id="comment-${p.id}" placeholder="Yorum yaz..."><button onclick="addComment(${p.id})">Gönder</button></div>`;
-feed.appendChild(el);
-if(p.user==="ben")mine.appendChild(el.cloneNode(true));
-});
-document.getElementById("postCount").textContent=posts.filter(p=>p.user==="ben").length+" gönderi";
-if(!posts.length)feed.innerHTML='<div class="empty">Henüz paylaşım yok.</div>';
-}
+    // Çıkış Yap
+    document.getElementById("logout-btn").onclick = () => signOut(auth);
 
-function escapeHTML(s){
-return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-function escapeJS(s){return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
+    // Kullanıcı durumunu takip et
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        authBox.style.display = "none";
+        postBox.style.display = "block";
+        userEmailEl.textContent = user.email;
+      } else {
+        authBox.style.display = "block";
+        postBox.style.display = "none";
+      }
+    });
 
-function addPost(){
-const text=document.getElementById("postText").value.trim();
-const book=document.getElementById("bookName").value.trim();
-if(!text){alert("Önce bir şeyler yazmalısın.");return;}
-posts.push({id:Date.now(),user:"ben",text,book,likes:0,liked:false,comments:[]});
-document.getElementById("postText").value="";
-document.getElementById("bookName").value="";
-persist();renderPosts();
-}
+    // Gönderi Paylaş
+    document.getElementById("share-btn").onclick = async () => {
+      const text = document.getElementById("post-text").value.trim();
+      if (!text) return;
+      await addDoc(collection(db, "posts"), {
+        text: text,
+        author: auth.currentUser.email,
+        createdAt: serverTimestamp()
+      });
+      document.getElementById("post-text").value = "";
+    };
 
-function likePost(id){
-const p=posts.find(x=>x.id===id);
-if(!p)return;
-p.liked=!p.liked;
-p.likes+=p.liked?1:-1;
-persist();renderPosts();
-}
-function addComment(id){
-const p=posts.find(x=>x.id===id);
-const input=document.getElementById("comment-"+id);
-if(!input||!input.value.trim())return;
-p.comments.push(input.value.trim());
-persist();renderPosts();
-}
-function savePostBook(book){
-if(!book){alert("Bu gönderide kitap adı belirtilmemiş.");return;}
-if(!saved.includes(book))saved.push(book);
-persist();renderSaved();alert("Kitaplığına eklendi!");
-}
-function renderSaved(){
-document.getElementById("savedBooks").innerHTML=saved.length?saved.map(b=>`<div class="book">📖 ${escapeHTML(b)} <button onclick="removeBook('${escapeJS(b)}')">Listeden çıkar</button></div>`).join(""):'<div class="empty">Kitaplığın henüz boş.</div>';
-}
-function removeBook(book){
-saved=saved.filter(x=>x!==book);persist();renderSaved();
-}
-function renderBooks(list){
-document.getElementById("bookResults").innerHTML=list.length?list.map(b=>`<div class="book"><b>${escapeHTML(b[0])}</b><small>${escapeHTML(b[1])}</small><button onclick="savePostBook('${escapeJS(b[0])}')">Kitaplığıma ekle</button></div>`).join(""):'<p>Kitap bulunamadı.</p>';
-}
-function searchBooks(){
-const q=document.getElementById("searchInput").value.toLocaleLowerCase("tr");
-renderBooks(books.filter(b=>(b[0]+" "+b[1]).toLocaleLowerCase("tr").includes(q)));
-}
-function quickSearch(q){
-showPage("discover");
-document.getElementById("searchInput").value=q;
-searchBooks();
-}
-function renderPopular(){
-document.getElementById("popular").innerHTML=books.slice(0,5).map(b=>`<div class="book"><b>${escapeHTML(b[0])}</b><small>${escapeHTML(b[1])}</small></div>`).join("");
-}
-function showPage(page,btn){
-document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
-document.getElementById(page).classList.add("active");
-document.querySelectorAll(".nav").forEach(x=>x.classList.remove("active"));
-if(btn)btn.classList.add("active");
-const titles={home:"Ana sayfa",discover:"Kitapları keşfet",library:"Kitaplığım",profile:"Profilim"};
-document.getElementById("heading").textContent=titles[page];
-if(page==="discover")renderBooks(books);
-if(page==="library")renderSaved();
-if(page==="profile")renderPosts();
-}
-function mobilePage(page){showPage(page);}
-
-renderPosts();
-renderSaved();
-renderPopular();
-</script>
+    // Akışı Canlı Dinle
+    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    onSnapshot(q, (snapshot) => {
+      feedEl.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.className = "post";
+        div.innerHTML = `<small><strong>${data.author}</strong></small><p>${data.text}</p>`;
+        feedEl.appendChild(div);
+      });
+    });
+  </script>
 </body>
 </html>
