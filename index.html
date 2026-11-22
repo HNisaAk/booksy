@@ -223,4 +223,449 @@
       .main { border-right: none; padding-bottom: 64px; }
       .bottombar {
         display: flex; justify-content: space-around;
-        position: fixed; bottom: 0; left: 0
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: #fff; border-top: 1px solid var(--line);
+        padding: 14px 0; z-index: 10;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="shell">
+    <!-- Sol Menü -->
+    <aside class="sidebar">
+      <div>
+        <a href="#home" class="logo" data-tab="home">
+          <span class="logo-mark">📚</span>
+          <span class="logo-text">BOOKSY</span>
+          <span class="logo-dot">.</span>
+        </a>
+        <nav class="nav">
+          <a href="#home" class="active" data-tab="home">Ana Sayfa</a>
+          <a href="#explore" data-tab="explore">Keşfet</a>
+          <a href="#profile" data-tab="profile">Profil</a>
+        </nav>
+      </div>
+      <div id="sidebar-user" class="sidebar-user muted" style="font-size: 0.88rem; padding: 8px 12px;"></div>
+    </aside>
+
+    <!-- Orta Akış -->
+    <main class="main">
+      <header class="page-header">
+        <h2 id="page-title">Ana Sayfa</h2>
+        <button id="header-logout" class="btn btn-outline" style="display: none; padding: 6px 12px; font-size: 0.82rem;">Çıkış Yap</button>
+      </header>
+
+      <!-- Giriş / Kayıt Kutusu (Giriş yapılmadıysa görünür) -->
+      <section id="auth-box" class="auth-box">
+        <div class="auth-tabs">
+          <button id="tab-login" class="btn" type="button">Giriş Yap</button>
+          <button id="tab-signup" class="btn btn-outline" type="button">Kayıt Ol</button>
+        </div>
+        <div id="auth-error" class="error-msg"></div>
+        <input id="username-input" class="field" type="text" placeholder="Kullanıcı adın (örn: nisa)" style="display: none;" />
+        <input id="email-input" class="field" type="email" placeholder="E-posta adresin" />
+        <input id="password-input" class="field" type="password" placeholder="Şifren (en az 6 karakter)" />
+        <button id="auth-submit" class="btn" type="button" style="width: 100%;">Giriş Yap</button>
+      </section>
+
+      <!-- Gönderi Paylaşma Alanı (Ana Sayfa + Giriş yapıldıysa görünür) -->
+      <section id="composer-box" class="composer" style="display: none;">
+        <textarea id="post-input" maxlength="280" placeholder="Ne okuyorsun veya aklından ne geçiyor?"></textarea>
+        <div class="row-between">
+          <span id="char-count" class="muted" style="font-size: 0.85rem;">0 / 280</span>
+          <button id="share-btn" class="btn" type="button">Paylaş</button>
+        </div>
+      </section>
+
+      <!-- Keşfet Arama Kutusu -->
+      <section id="search-box" class="search-wrap" style="display: none;">
+        <input id="search-input" class="field" type="search" placeholder="Gönderilerde veya kullanıcılarda ara..." style="margin-bottom: 0;" />
+      </section>
+
+      <!-- Profil Özeti -->
+      <section id="profile-box" class="profile-banner" style="display: none;"></section>
+
+      <!-- Gönderi Akışı -->
+      <div id="feed">
+        <div class="notice">Gönderiler yükleniyor...</div>
+      </div>
+    </main>
+
+    <!-- Sağ Panel -->
+    <aside class="rightbar">
+      <div class="panel">
+        <h3>Booksy</h3>
+        <p>Kitap alıntılarını, okuma notlarını ve anlık düşüncelerini paylaşabileceğin sade topluluk akışı.</p>
+      </div>
+      <div class="panel">
+        <h3>Canlı İstatistik</h3>
+        <p id="stats-text">Akış yükleniyor...</p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Telefon Alt Menüsü -->
+  <nav class="bottombar">
+    <a href="#home" class="active" data-tab="home">Ana Sayfa</a>
+    <a href="#explore" data-tab="explore">Keşfet</a>
+    <a href="#profile" data-tab="profile">Profil</a>
+  </nav>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      deleteDoc,
+      doc,
+      updateDoc,
+      arrayUnion,
+      arrayRemove,
+      query,
+      orderBy,
+      onSnapshot,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC2CjLHWSKPeTB0HC6AT7AWSNIomHikS3Q",
+      authDomain: "booksy-2bca9.firebaseapp.com",
+      projectId: "booksy-2bca9",
+      storageBucket: "booksy-2bca9.firebasestorage.app",
+      messagingSenderId: "854942626548",
+      appId: "1:854942626548:web:d778ca1f2e05b08ef4e4a1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Durum değişkenleri
+    let currentUser = null;
+    let currentTab = "home";
+    let isSignupMode = false;
+    let allPosts = [];
+
+    // DOM elemanları
+    const authBox = document.getElementById("auth-box");
+    const composerBox = document.getElementById("composer-box");
+    const searchBox = document.getElementById("search-box");
+    const profileBox = document.getElementById("profile-box");
+    const feedEl = document.getElementById("feed");
+    const pageTitle = document.getElementById("page-title");
+    const headerLogout = document.getElementById("header-logout");
+    const sidebarUser = document.getElementById("sidebar-user");
+    const statsText = document.getElementById("stats-text");
+
+    const tabLogin = document.getElementById("tab-login");
+    const tabSignup = document.getElementById("tab-signup");
+    const authError = document.getElementById("auth-error");
+    const usernameInput = document.getElementById("username-input");
+    const emailInput = document.getElementById("email-input");
+    const passwordInput = document.getElementById("password-input");
+    const authSubmit = document.getElementById("auth-submit");
+
+    const postInput = document.getElementById("post-input");
+    const charCount = document.getElementById("char-count");
+    const shareBtn = document.getElementById("share-btn");
+    const searchInput = document.getElementById("search-input");
+
+    // Giriş / Kayıt modu geçişi
+    function setAuthMode(signup) {
+      isSignupMode = signup;
+      authError.style.display = "none";
+      usernameInput.style.display = signup ? "block" : "none";
+      authSubmit.textContent = signup ? "Kayıt Ol" : "Giriş Yap";
+      tabLogin.className = signup ? "btn btn-outline" : "btn";
+      tabSignup.className = signup ? "btn" : "btn btn-outline";
+    }
+    tabLogin.onclick = () => setAuthMode(false);
+    tabSignup.onclick = () => setAuthMode(true);
+
+    function showError(msg) {
+      authError.textContent = msg;
+      authError.style.display = "block";
+    }
+
+    function translateFirebaseError(code) {
+      const map = {
+        "auth/email-already-in-use": "Bu e-posta adresi zaten kayıtlı.",
+        "auth/invalid-email": "Geçerli bir e-posta adresi gir.",
+        "auth/weak-password": "Şifre en az 6 karakter olmalı.",
+        "auth/invalid-credential": "E-posta veya şifre hatalı.",
+        "auth/user-not-found": "Bu e-posta ile kayıtlı hesap bulunamadı.",
+        "auth/wrong-password": "Şifre hatalı."
+      };
+      return map[code] || "Bir hata oluştu (" + code + ")";
+    }
+
+    // Giriş / Kayıt işlemi
+    authSubmit.onclick = async () => {
+      authError.style.display = "none";
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const rawUsername = usernameInput.value.trim();
+
+      if (!email || !password) {
+        return showError("E-posta ve şifre alanlarını doldur.");
+      }
+
+      authSubmit.disabled = true;
+      try {
+        if (isSignupMode) {
+          const cleanName = rawUsername.replace(/^@/, "").trim();
+          if (cleanName.length < 2) {
+            authSubmit.disabled = false;
+            return showError("En az 2 karakterli bir kullanıcı adı belirle.");
+          }
+          const cred = await createUserWithEmailAndPassword(auth, email, password);
+          await updateProfile(cred.user, { displayName: cleanName });
+          currentUser = auth.currentUser;
+          updateUI();
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+        emailInput.value = "";
+        passwordInput.value = "";
+        usernameInput.value = "";
+      } catch (e) {
+        showError(translateFirebaseError(e.code));
+      } finally {
+        authSubmit.disabled = false;
+      }
+    };
+
+    headerLogout.onclick = () => signOut(auth);
+
+    // Oturum takibi
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      updateUI();
+      renderFeed();
+    });
+
+    // Sekme değiştirme
+    document.querySelectorAll("[data-tab]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        currentTab = el.dataset.tab;
+        document.querySelectorAll("[data-tab]").forEach((item) => {
+          if (item.classList.contains("logo")) return;
+          item.classList.toggle("active", item.dataset.tab === currentTab);
+        });
+        updateUI();
+        renderFeed();
+      });
+    });
+
+    function getUserHandle(user) {
+      if (!user) return "";
+      return user.displayName || user.email.split("@")[0];
+    }
+
+    function updateUI() {
+      const titles = { home: "Ana Sayfa", explore: "Keşfet", profile: "Profil" };
+      pageTitle.textContent = titles[currentTab];
+
+      if (currentUser) {
+        const handle = getUserHandle(currentUser);
+        authBox.style.display = "none";
+        headerLogout.style.display = "inline-block";
+        sidebarUser.textContent = "@" + handle;
+        composerBox.style.display = currentTab === "home" ? "block" : "none";
+      } else {
+        authBox.style.display = "block";
+        headerLogout.style.display = "none";
+        sidebarUser.textContent = "";
+        composerBox.style.display = "none";
+      }
+
+      searchBox.style.display = currentTab === "explore" ? "block" : "none";
+
+      if (currentTab === "profile") {
+        profileBox.style.display = "block";
+        if (currentUser) {
+          const handle = getUserHandle(currentUser);
+          const myCount = allPosts.filter((p) => p.uid === currentUser.uid).length;
+          profileBox.innerHTML = "";
+          const strong = document.createElement("strong");
+          strong.textContent = handle;
+          const span = document.createElement("div");
+          span.className = "muted";
+          span.textContent = `@${handle} · ${myCount} gönderi`;
+          profileBox.append(strong, span);
+        } else {
+          profileBox.innerHTML = '<span class="muted">Profilini görmek için yukarıdan giriş yap.</span>';
+        }
+      } else {
+        profileBox.style.display = "none";
+      }
+    }
+
+    // Karakter sayacı ve gönderi paylaşma
+    postInput.addEventListener("input", () => {
+      charCount.textContent = `${postInput.value.length} / 280`;
+    });
+
+    shareBtn.onclick = async () => {
+      const text = postInput.value.trim();
+      if (!text || !currentUser) return;
+
+      shareBtn.disabled = true;
+      try {
+        const handle = getUserHandle(currentUser);
+        await addDoc(collection(db, "posts"), {
+          text: text,
+          authorName: handle,
+          uid: currentUser.uid,
+          likes: [],
+          createdAt: serverTimestamp()
+        });
+        postInput.value = "";
+        charCount.textContent = "0 / 280";
+      } catch (e) {
+        alert("Paylaşılamadı: " + e.message);
+      } finally {
+        shareBtn.disabled = false;
+      }
+    };
+
+    searchInput.addEventListener("input", renderFeed);
+
+    // Zaman formatlama
+    function formatTime(ts) {
+      if (!ts || !ts.toDate) return "Şimdi";
+      const diff = Math.floor((Date.now() - ts.toDate().getTime()) / 1000);
+      if (diff < 60) return "Az önce";
+      if (diff < 3600) return Math.floor(diff / 60) + " dk";
+      if (diff < 86400) return Math.floor(diff / 3600) + " sa";
+      return ts.toDate().toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
+    }
+
+    // Firestore'dan canlı akış dinleme
+    const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    onSnapshot(postsQuery, (snapshot) => {
+      allPosts = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      statsText.textContent = `Toplam ${allPosts.length} gönderi paylaşıldı.`;
+      updateUI();
+      renderFeed();
+    }, (error) => {
+      feedEl.innerHTML = '<div class="notice">Veritabanına bağlanılamadı. Firestore Database kurulumunun ve test modunun açık olduğundan emin ol.</div>';
+      console.error(error);
+    });
+
+    // Akışı ekrana çizme
+    function renderFeed() {
+      let list = [...allPosts];
+
+      if (currentTab === "explore") {
+        const q = searchInput.value.trim().toLowerCase();
+        if (q) {
+          list = list.filter((p) =>
+            (p.text || "").toLowerCase().includes(q) ||
+            (p.authorName || p.author || "").toLowerCase().includes(q)
+          );
+        }
+      } else if (currentTab === "profile") {
+        if (!currentUser) {
+          feedEl.innerHTML = "";
+          return;
+        }
+        list = list.filter((p) => p.uid === currentUser.uid);
+      }
+
+      feedEl.innerHTML = "";
+      if (list.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "notice";
+        empty.textContent = currentTab === "explore"
+          ? "Aramanla eşleşen gönderi bulunamadı."
+          : "Henüz gönderi yok. İlk paylaşımı sen yap!";
+        feedEl.appendChild(empty);
+        return;
+      }
+
+      list.forEach((post) => {
+        const author = post.authorName || post.author || "okur";
+        const likes = Array.isArray(post.likes) ? post.likes : [];
+        const isLiked = currentUser && likes.includes(currentUser.uid);
+        const isOwner = currentUser && post.uid === currentUser.uid;
+
+        const article = document.createElement("article");
+        article.className = "post";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = author.charAt(0).toUpperCase();
+
+        const body = document.createElement("div");
+        body.className = "post-body";
+
+        const meta = document.createElement("div");
+        meta.className = "post-meta";
+
+        const nameEl = document.createElement("strong");
+        nameEl.textContent = author;
+
+        const handleEl = document.createElement("span");
+        handleEl.className = "muted";
+        handleEl.textContent = `@${author} · ${formatTime(post.createdAt)}`;
+
+        meta.append(nameEl, handleEl);
+
+        const textEl = document.createElement("p");
+        textEl.textContent = post.text || "";
+
+        const actions = document.createElement("div");
+        actions.className = "post-actions";
+
+        // Beğeni butonu
+        const likeBtn = document.createElement("button");
+        likeBtn.className = "action-btn" + (isLiked ? " liked" : "");
+        likeBtn.type = "button";
+        likeBtn.textContent = `${isLiked ? "♥" : "♡"} ${likes.length}`;
+        likeBtn.onclick = async () => {
+          if (!currentUser) {
+            alert("Beğenmek için önce giriş yapmalısın.");
+            return;
+          }
+          const postRef = doc(db, "posts", post.id);
+          await updateDoc(postRef, {
+            likes: isLiked ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid)
+          });
+        };
+        actions.appendChild(likeBtn);
+
+        // Kendi gönderisiyse silme butonu
+        if (isOwner) {
+          const delBtn = document.createElement("button");
+          delBtn.className = "action-btn delete";
+          delBtn.type = "button";
+          delBtn.textContent = "Sil";
+          delBtn.onclick = async () => {
+            if (confirm("Bu gönderiyi silmek istediğine emin misin?")) {
+              await deleteDoc(doc(db, "posts", post.id));
+            }
+          };
+          actions.appendChild(delBtn);
+        }
+
+        body.append(meta, textEl, actions);
+        article.append(avatar, body);
+        feedEl.appendChild(article);
+      });
+    }
+  </script>
+</body>
+</html>
